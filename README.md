@@ -28,10 +28,12 @@ sbatch run-gpu8-dist.sh mnist_ddp.py --epochs=100
 
 ## PyTorch Lightning examples
 
+Multi-GPU and multi-node jobs are even easier with [PyTorch Lightning][3].
+
 Four GPUs on single node on Puhti:
 
 ```bash
-sbatch run-gpu4.sh mnist_lightning_ddp.py --gpus=4 --nodes=2^C-epochs=100
+sbatch run-gpu4.sh mnist_lightning_ddp.py --gpus=4 --epochs=100
 ```
 
 Two nodes, 8 GPUs in total on Puhti:
@@ -42,3 +44,4 @@ sbatch run-gpu8-dist.sh mnist_lightning_ddp.py --gpus=8 --nodes=2 --epochs=100
 
 [1]: https://pytorch.org/tutorials/beginner/dist_overview.html
 [2]: https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html
+[3]: https://www.pytorchlightning.ai/
