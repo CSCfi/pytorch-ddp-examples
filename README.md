@@ -12,7 +12,7 @@ MNIST.
 
 ## Multi-GPU, single-node
 
-The simplest case is using all four GPUs on a single node.
+The simplest case is using all four GPUs on a single node on Puhti.
 
 ```bash
 sbatch run-gpu4-dist.sh mnist_ddp.py --epochs=100
@@ -20,8 +20,12 @@ sbatch run-gpu4-dist.sh mnist_ddp.py --epochs=100
 
 ## Multi-GPU, multi-node
 
-Example using two nodes, four GPUs on each giving a total of 8 GPUs:
+Example using two nodes, four GPUs on each giving a total of 8 GPUs (again, on Puhti):
 
 ```bash
 sbatch run-gpu8-dist.sh mnist_ddp.py --epochs=100
 ```
+
+
+[1]: https://pytorch.org/tutorials/beginner/dist_overview.html
+[2]: https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html
