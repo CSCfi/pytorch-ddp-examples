@@ -1,3 +1,5 @@
 slurm*out
 *~
-/data
+/data/
+/MNIST/
+/lightning_logs/
