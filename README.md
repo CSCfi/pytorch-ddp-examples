@@ -6,7 +6,7 @@ Unfortunately, in this instance, the official PyTorch documentation and usage
 examples are sadly out-of-date with often conflicting and confusing advice
 given.
 
-To make usage of DDP on CSC's Supercomputers, we have created a set of example
+To make usage of DDP on CSC's Supercomputers easier, we have created a set of examples
 on how to run simple DDP jobs on the cluster. All example train a simple CNN on
 MNIST.
 
