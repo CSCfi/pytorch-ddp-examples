@@ -39,7 +39,7 @@ sbatch run-gpu4.sh mnist_lightning_ddp.py --gpus=4 --epochs=100
 Two nodes, 8 GPUs in total on Puhti:
 
 ```bash
-sbatch run-gpu8-dist.sh mnist_lightning_ddp.py --gpus=8 --nodes=2 --epochs=100
+sbatch run-gpu8-dist.sh mnist_lightning_ddp.py --gpus=4 --nodes=2 --epochs=100
 ```
 
 [1]: https://pytorch.org/tutorials/beginner/dist_overview.html

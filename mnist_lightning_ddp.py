@@ -62,7 +62,12 @@ def main():
 
     trainer = pl.Trainer(gpus=args.gpus, num_nodes=args.nodes,
                          max_epochs=args.epochs, accelerator='ddp')
+
+    from datetime import datetime
+    t0 = datetime.now()
     trainer.fit(convnet, train_loader)
+    dt = datetime.now() - t0
+    print('Training took {}'.format(dt))
 
 
 if __name__ == '__main__':
