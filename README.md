@@ -69,6 +69,9 @@ Single-node with four GPUs (Puhti):
 sbatch run-gpu4-deepspeed.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_config ds_config.json
 ```
 
+Here we are using Slurm to launch a single process which uses DeepSpeed's
+launcher to launch four processes (one for each GPU).
+
 Two nodes, 8 GPUs in total (Puhti):
 
 ```bash
@@ -76,23 +79,27 @@ sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_c
 ```
 
 Note that we are using Slurm's `srun` to launch four processess on each node
-(one per GPU), and instead of DeepSpeeds launcher we are relying on MPI to
+(one per GPU), and instead of DeepSpeed's launcher we are relying on MPI to
 provide it the information it needs to communicate between all the processes.
 
 Finally, we hade to make a small change to the DeepSpeed source code as it would
 by default use the wrong IP address (and thus the wrong interface) to connect to
-the master node:
+the master node (causing the initialization phase to get stuck and time out
+eventually):
 
 ```bash
-$ diff .local/lib/python3.8/site-packages/deepspeed/utils/distributed.py{.old,}
+$ diff ~/.local/lib/python3.8/site-packages/deepspeed/utils/distributed.py{.old,}
 66c66
 <         hostname_cmd = ["hostname -I"]
 ---
 >         hostname_cmd = ["hostname -s"]
 ```
 
-By using `hostname -s` we get the short hostname, and using that it seems to
-connect over InfiniBand instead of Ethernet.
+In the original code `hostname -I` returned a list of IPs, one for each network
+interface. DeepSpeed would simply pick the first one, which unfortunately was
+for the Ethernet interface, which seems to be blocked. By using `hostname -s` we
+get the short hostname, and using that it seems to connect over InfiniBand
+instead of Ethernet, which works.
 
 
 [1]: https://pytorch.org/tutorials/beginner/dist_overview.html
