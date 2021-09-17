@@ -75,6 +75,25 @@ Two nodes, 8 GPUs in total (Puhti):
 sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_config ds_config.json
 ```
 
+Note that we are using Slurm's `srun` to launch four processess on each node
+(one per GPU), and instead of DeepSpeeds launcher we are relying on MPI to
+provide it the information it needs to communicate between all the processes.
+
+Finally, we hade to make a small change to the DeepSpeed source code as it would
+by default use the wrong IP address (and thus the wrong interface) to connect to
+the master node:
+
+```bash
+$ diff .local/lib/python3.8/site-packages/deepspeed/utils/distributed.py{.old,}
+66c66
+<         hostname_cmd = ["hostname -I"]
+---
+>         hostname_cmd = ["hostname -s"]
+```
+
+By using `hostname -s` we get the short hostname, and using that it seems to
+connect over InfiniBand instead of Ethernet.
+
 
 [1]: https://pytorch.org/tutorials/beginner/dist_overview.html
 [2]: https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html
