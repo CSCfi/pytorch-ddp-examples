@@ -56,7 +56,7 @@ investigating.
 ```bash
 module purge
 module load pytorch/1.9
-TORCH_CUDA_ARCH_LIST="7.0" DS_BUILD_OPS=1 DS_BUILD_AIO=0 DS_BUILD_TRANSFORMER_INFERENCE=0 \
+TORCH_CUDA_ARCH_LIST="7.0;8.0" DS_BUILD_OPS=1 DS_BUILD_AIO=0 DS_BUILD_TRANSFORMER_INFERENCE=0 \
   pip install -vv --user deepspeed
 ```
 
@@ -81,6 +81,7 @@ sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_c
 Note that we are using Slurm's `srun` to launch four processess on each node
 (one per GPU), and instead of DeepSpeed's launcher we are relying on MPI to
 provide it the information it needs to communicate between all the processes.
+Also remember to install `mpi4py` package, for example with `pip install --user mpi4py`.
 
 Finally, we hade to make a small change to the DeepSpeed source code as it would
 by default use the wrong IP address (and thus the wrong interface) to connect to
