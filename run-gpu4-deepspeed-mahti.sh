@@ -8,9 +8,10 @@
 #SBATCH --time=15
 #SBATCH --gres=gpu:a100:4
 
-module purge
-module load pytorch/1.9
+#module purge
+#module load pytorch/1.9
 
 # export OMP_NUM_THREADS=10
 
-srun singularity_wrapper exec ~/.local/bin/deepspeed $*
+srun singularity_wrapper exec deepspeed $*
+#srun singularity_wrapper exec ~/.local/bin/deepspeed $*

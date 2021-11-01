@@ -8,11 +8,11 @@
 #SBATCH --time=15
 #SBATCH --gres=gpu:a100:4
 
-module purge
-module load pytorch/1.9
+#module purge
+#module load pytorch/1.9
 
 export NCCL_DEBUG=INFO
-export SING_IMAGE=/appl/soft/ai/singularity/images/pytorch_1.9.0_csc_custom.sif
+#export SING_IMAGE=/appl/soft/ai/singularity/images/pytorch_1.9.0_csc_custom.sif
 
 set -x
 
