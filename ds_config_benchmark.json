@@ -1,0 +1,11 @@
+{
+  "train_micro_batch_size_per_gpu": 32,
+  "steps_per_print": 100,
+  "optimizer": {
+    "type": "SGD",
+    "params": {
+      "lr": 1e-4
+    }
+  },
+  "wall_clock_breakdown": false
+}
