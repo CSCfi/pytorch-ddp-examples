@@ -3,3 +3,4 @@ slurm*out
 /data/
 /MNIST/
 /lightning_logs/
+/transformers-*/

@@ -102,6 +102,40 @@ for the Ethernet interface, which seems to be blocked. By using `hostname -s` we
 get the short hostname, and using that it seems to connect over InfiniBand
 instead of Ethernet, which works.
 
+## Benchmark codes
+
+Finally, we have some "benchmarking" scripts which run larger training jobs.
+Currently, these are for Mahti only.
+
+ResNet training with ImageNet data, PyTorch DDP with 1, 4 or 8 GPUs:
+
+```
+run-gpu1-benchmark-ddp.sh
+run-gpu4-benchmark-ddp.sh
+run-gpu8-benchmark-ddp.sh
+```
+
+ResNet training with ImageNet data, PyTorch DeepSpeed with 4 or 8 GPUs:
+
+```
+run-gpu4-benchmark-deepspeed.sh
+run-gpu8-benchmark-deepspeed.sh
+```
+
+HuggingFace Transformers fine-tuning GPT-2:
+
+```
+run-gpu1-benchmark-transformers.sh
+run-gpu4-benchmark-transformers.sh
+run-gpu8-benchmark-transformers.sh
+```
+
+Note that the Transformers benchmark requires checking out the right version of
+the official repository, for example:
+
+```bash
+git clone -b v4.11.3 https://github.com/huggingface/transformers/
+```
 
 [1]: https://pytorch.org/tutorials/beginner/dist_overview.html
 [2]: https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html
