@@ -41,8 +41,9 @@ class ConvNet(nn.Module):
 
 def train(args):
     num_epochs = args.epochs
-    #local_rank = int(os.environ['LOCAL_RANK'])
     local_rank = args.local_rank
+    if local_rank == -1:
+        local_rank = int(os.environ.get('PMIX_RANK', -1))
 
     #dist.init_process_group(backend='nccl')
     print("Running init_distributed")
@@ -89,7 +90,7 @@ def train(args):
             model_engine.step()
             
             if (i + 1) % 100 == 0 and local_rank == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(local_rank,
                     epoch + 1,
                     num_epochs,
                     i + 1,
