@@ -72,7 +72,7 @@ def main():
                         help='number of GPUs per node')
     parser.add_argument('--nodes', default=1, type=int, metavar='N',
                         help='number of nodes')
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
+    parser.add_argument('--epochs', default=1, type=int, metavar='N',
                         help='maximum number of epochs to run')
 
     parser.add_argument('--model', type=str, default='resnet50',
