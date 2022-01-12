@@ -4,3 +4,5 @@ slurm*out
 /MNIST/
 /lightning_logs/
 /transformers-*/
+/logs
+/lightning_model.ckpt

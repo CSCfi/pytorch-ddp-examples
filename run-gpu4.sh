@@ -9,7 +9,7 @@
 #SBATCH --gres=gpu:v100:4
 
 module purge
-module load pytorch/1.9
+module load pytorch
 
 export OMP_NUM_THREADS=10
 

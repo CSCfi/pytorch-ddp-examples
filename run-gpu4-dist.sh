@@ -9,6 +9,6 @@
 #SBATCH --gres=gpu:v100:4
 
 module purge
-module load pytorch/1.9
+module load pytorch
 
 srun python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 $*

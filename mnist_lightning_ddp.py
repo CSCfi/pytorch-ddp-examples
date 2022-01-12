@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
+# from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.plugins import DDPPlugin
 
 
 class LitConvNet(pl.LightningModule):
@@ -56,18 +58,25 @@ def main():
     dataset = MNIST(os.getcwd(), download=True,
                     transform=transforms.ToTensor())
     train_loader = DataLoader(dataset, batch_size=batch_size,
-                              num_workers=0, pin_memory=True)
+                              num_workers=10, pin_memory=True)
 
     convnet = LitConvNet()
 
-    trainer = pl.Trainer(gpus=args.gpus, num_nodes=args.nodes,
-                         max_epochs=args.epochs, accelerator='ddp')
+    trainer = pl.Trainer(gpus=args.gpus,
+                         num_nodes=args.nodes,
+                         max_epochs=args.epochs,
+                         accelerator='gpu',
+#                         strategy=DDPPlugin(find_unused_parameters=False))
+#                         strategy=DDPStrategy(find_unused_parameters=False))
+                         strategy='ddp')
 
     from datetime import datetime
     t0 = datetime.now()
     trainer.fit(convnet, train_loader)
     dt = datetime.now() - t0
     print('Training took {}'.format(dt))
+
+    trainer.save_checkpoint("lightning_model.ckpt")
 
 
 if __name__ == '__main__':
