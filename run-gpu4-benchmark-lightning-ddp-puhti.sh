@@ -15,5 +15,5 @@ set -x
 tar -xf $IMAGENET_DATA -C $LOCAL_SCRATCH
 
 date
-srun python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 benchmark_ddp.py --datadir ${LOCAL_SCRATCH}/ilsvrc2012-torch $*
+srun python3 benchmark_lightning_ddp.py --gpus=4 --epochs=1 --datadir ${LOCAL_SCRATCH}/ilsvrc2012-torch $*
 date

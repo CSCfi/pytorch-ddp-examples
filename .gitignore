@@ -5,4 +5,4 @@ slurm*out
 /lightning_logs/
 /transformers-*/
 /logs
-/lightning_model.ckpt
+/*.ckpt
