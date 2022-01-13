@@ -36,10 +36,6 @@ Four GPUs on single node on Puhti:
 sbatch run-gpu4.sh mnist_lightning_ddp.py --gpus=4 --epochs=100
 ```
 
-**NOTE:** Lightning seems to work a bit slower on Puhti than pure PyTorch at the
-moment. We are still investigating this.
-
-
 Two nodes, 8 GPUs in total on Puhti:
 
 ```bash
@@ -51,7 +47,9 @@ investigating.
 
 ## DeepSpeed examples
 
-[DeepSpeed][4] was installed on Puhti like this:
+[DeepSpeed][4] should work on Puhti and Mahti with the `pytorch/1.10` module.
+
+For reference, it can be installed on earlier version manually like this:
 
 ```bash
 module purge
@@ -100,12 +98,13 @@ In the original code `hostname -I` returned a list of IPs, one for each network
 interface. DeepSpeed would simply pick the first one, which unfortunately was
 for the Ethernet interface, which seems to be blocked. By using `hostname -s` we
 get the short hostname, and using that it seems to connect over InfiniBand
-instead of Ethernet, which works.
+instead of Ethernet, which works. **Note:** the above code change is not
+necessary for `pytorch/1.10` or newer modules.
 
 ## Benchmark codes
 
 Finally, we have some "benchmarking" scripts which run larger training jobs.
-Currently, these are for Mahti only.
+These are for Mahti only, unless otherwise specified.
 
 ResNet training with ImageNet data, PyTorch DDP with 1, 4 or 8 GPUs:
 
@@ -115,7 +114,16 @@ run-gpu4-benchmark-ddp.sh
 run-gpu8-benchmark-ddp.sh
 ```
 
-ResNet training with ImageNet data, PyTorch DeepSpeed with 4 or 8 GPUs:
+Puhti versions with `-puhti` ending.
+
+ResNet training with ImageNet, PyTorch DDP with Lightning (Puhti only):
+
+```
+run-gpu4-benchmark-lightning-ddp-puhti.sh
+run-gpu8-benchmark-lightning-ddp-puhti.sh
+```
+
+ResNet training with ImageNet, PyTorch DeepSpeed with 4 or 8 GPUs:
 
 ```
 run-gpu4-benchmark-deepspeed.sh
