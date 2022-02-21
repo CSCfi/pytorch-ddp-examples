@@ -23,6 +23,7 @@ def train(args):
         print(torch.__config__.show())
 
     dist.init_process_group(backend='nccl')
+    world_size = dist.get_world_size()
 
     torch.manual_seed(0)
     torch.cuda.set_device(local_rank)
@@ -38,15 +39,28 @@ def train(args):
 
     model = DistributedDataParallel(model, device_ids=[local_rank])
 
-    traindir = os.path.join(args.datadir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-    train_dataset = datasets.ImageFolder(traindir, transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        normalize,
-    ]))
+    if args.datadir is not None:
+        traindir = os.path.join(args.datadir, 'train')
+        print('Reading training data from:', traindir)
+        train_dataset = datasets.ImageFolder(traindir, transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+    else:
+        print('No --datadir argument given, using fake data for training...')
+        train_dataset = datasets.FakeData(size=1281184,  # like ImageNet
+                                          image_size=(3, 256, 256),
+                                          num_classes=1000,
+                                          transform=transforms.Compose([
+                                              transforms.RandomResizedCrop(224),
+                                              transforms.RandomHorizontalFlip(),
+                                              transforms.ToTensor(),
+                                              normalize,
+                                          ]))
     train_sampler = DistributedSampler(train_dataset)
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batchsize,
                               shuffle=False, num_workers=args.workers,
@@ -66,16 +80,23 @@ def train(args):
             loss.backward()
             optimizer.step()
             if (i + 1) % 100 == 0 and local_rank == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(
-                    epoch + 1,
-                    args.epochs,
-                    i + 1,
-                    total_step,
-                    loss.item()))
+                num_images = i * args.batchsize * world_size
+                tot_secs = (datetime.now()-start).total_seconds()
+
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Images/sec: {:.2f}'.
+                      format(epoch + 1,
+                             args.epochs,
+                             i + 1,
+                             total_step,
+                             loss.item(),
+                             num_images/tot_secs))
             if args.steps is not None and i >= args.steps:
                 break
     if local_rank == 0:
-        print("Training completed in: " + str(datetime.now() - start))
+        dur = datetime.now() - start
+        ni = total_step * args.batchsize * world_size
+        print("Training completed in: " + str(dur))
+        print("Images/sec: {:.4f}".format(ni/dur.total_seconds()))
 
 
 def main():
@@ -85,7 +106,7 @@ def main():
     parser.add_argument('--model', type=str, default='resnet50',
                         help='model to benchmark')
     parser.add_argument('--datadir', type=str,
-                        help='Data directory')
+                        help='Data directory', required=False)
     parser.add_argument('-b', '--batchsize', type=int, default=32,
                         help='Batch size')
     parser.add_argument('-j', '--workers', type=int, default=10,
