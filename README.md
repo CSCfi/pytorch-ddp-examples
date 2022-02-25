@@ -106,6 +106,8 @@ necessary for `pytorch/1.10` or newer modules.
 Finally, we have some "benchmarking" scripts which run larger training jobs.
 These are for Mahti only, unless otherwise specified.
 
+**Note:** updated versions of these benchmarks (and others) can now be found from the [Machine learning benchmarks repository](https://github.com/mvsjober/ml-benchmarks).
+
 ResNet training with ImageNet data, PyTorch DDP with 1, 4 or 8 GPUs:
 
 ```
