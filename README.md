@@ -1,4 +1,4 @@
-# PyTorch DDP and DeepSpeed examples for CSC Supercomputers
+# PyTorch multi-GPU and multi-node examples for CSC's supercomputers
 
 [PyTorch distributed][pytorch_dist] and in particular
 `DistributedDataParallel` (DDP), offers a nice way of running
@@ -70,7 +70,8 @@ onwards).
 Single-node with four GPUs (Puhti):
 
 ```bash
-sbatch run-gpu4-deepspeed.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_config ds_config.json
+sbatch run-gpu4-deepspeed.sh mnist_ddp_deepspeed.py --epochs=100 \
+    --deepspeed --deepspeed_config ds_config.json
 ```
 
 Here we are using Slurm to launch a single process which uses DeepSpeed's
@@ -79,7 +80,8 @@ launcher to launch four processes (one for each GPU).
 Two nodes, 8 GPUs in total (Puhti):
 
 ```bash
-sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 --deepspeed --deepspeed_config ds_config.json
+sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 \
+    --deepspeed --deepspeed_config ds_config.json
 ```
 
 Note that we are using Slurm's `srun` to launch four processess on each node
