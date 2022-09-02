@@ -29,7 +29,7 @@ machinelearing](https://docs.csc.fi/support/tutorials/ml-multi/).
 The simplest case is using all four GPUs on a single node on Puhti.
 
 ```bash
-sbatch run-gpu4-dist.sh mnist_ddp.py --epochs=100
+sbatch run-ddp-gpu4.sh
 ```
 
 ## Multi-GPU, multi-node
@@ -37,7 +37,7 @@ sbatch run-gpu4-dist.sh mnist_ddp.py --epochs=100
 Example using two nodes, four GPUs on each giving a total of 8 GPUs (again, on Puhti):
 
 ```bash
-sbatch run-gpu8-dist.sh mnist_ddp.py --epochs=100
+sbatch run-ddp-gpu8.sh
 ```
 
 
@@ -48,17 +48,17 @@ Multi-GPU and multi-node jobs are even easier with [PyTorch Lightning][lightning
 Four GPUs on single node on Puhti:
 
 ```bash
-sbatch run-gpu4.sh mnist_lightning_ddp.py --gpus=4 --epochs=100
+sbatch run-lightning-gpu4.sh
 ```
 
 Two nodes, 8 GPUs in total on Puhti:
 
 ```bash
-sbatch run-gpu8-dist.sh mnist_lightning_ddp.py --gpus=4 --nodes=2 --epochs=100
+sbatch run-lightning-gpu8.sh
 ```
 
-**NOTE:** Multi-node Lightning still seems a bit unstable on Puhti. We are
-investigating.
+**Note:** Multi-node Lightning still seems to work best with
+`pytorch/1.12` module or newer on Puhti.
 
 
 ## DeepSpeed examples
@@ -70,8 +70,7 @@ onwards).
 Single-node with four GPUs (Puhti):
 
 ```bash
-sbatch run-gpu4-deepspeed.sh mnist_ddp_deepspeed.py --epochs=100 \
-    --deepspeed --deepspeed_config ds_config.json
+sbatch run-deepspeed-gpu4.sh
 ```
 
 Here we are using Slurm to launch a single process which uses DeepSpeed's
@@ -80,8 +79,7 @@ launcher to launch four processes (one for each GPU).
 Two nodes, 8 GPUs in total (Puhti):
 
 ```bash
-sbatch run-gpu8.sh mnist_ddp_deepspeed.py --epochs=100 \
-    --deepspeed --deepspeed_config ds_config.json
+sbatch run-deepspeed-gpu8.sh
 ```
 
 Note that we are using Slurm's `srun` to launch four processess on each node
