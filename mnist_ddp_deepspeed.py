@@ -5,13 +5,9 @@ from datetime import datetime
 import argparse
 import os
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
-from torch.utils.data.distributed import DistributedSampler
-from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data import DataLoader
 import deepspeed
 from datetime import timedelta
 
@@ -45,37 +41,23 @@ def train(args):
     if local_rank == -1:
         local_rank = int(os.environ.get('PMIX_RANK', -1))
 
-    #dist.init_process_group(backend='nccl')
-    print("Running init_distributed")
     deepspeed.init_distributed(timeout=timedelta(minutes=5))
-    print("Done with init_distributed")
 
     torch.manual_seed(0)
-    # torch.cuda.set_device(local_rank)
-    model = ConvNet() #.cuda()
-    batch_size = 100
+    model = ConvNet()
 
     criterion = nn.CrossEntropyLoss().cuda()
-    # optimizer = torch.optim.SGD(model.parameters(), 1e-4)
-
-    #model = DistributedDataParallel(model, device_ids=[local_rank])
 
     train_dataset = MNIST(root='./data', train=True,
                           transform=transforms.ToTensor(), download=True)
-    # train_sampler = DistributedSampler(train_dataset)
-    # train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-    #                           shuffle=False, num_workers=0, pin_memory=True,
-    #                           sampler=train_sampler)
 
-    print("Running initialize")
     model_engine, optimizer, train_loader, __ = deepspeed.initialize(
         args=args, model=model, model_parameters=model.parameters(),
         training_data=train_dataset)
-    print("Done with initialize")
-    
+
     start = datetime.now()
-    total_step = len(train_loader)
     for epoch in range(num_epochs):
+        tot_loss = 0
         for i, data in enumerate(train_loader):
             images = data[0].to(model_engine.local_rank)
             labels = data[1].to(model_engine.local_rank)
@@ -83,19 +65,17 @@ def train(args):
             outputs = model_engine(images)
             loss = criterion(outputs, labels)
 
-            # optimizer.zero_grad()
-            # loss.backward()
-            # optimizer.step()
             model_engine.backward(loss)
             model_engine.step()
-            
-            if (i + 1) % 100 == 0 and local_rank == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(local_rank,
-                    epoch + 1,
-                    num_epochs,
-                    i + 1,
-                    total_step,
-                    loss.item()))
+
+            tot_loss += loss.item()
+
+        if local_rank == 0:
+            print('Epoch [{}/{}], average loss: {:.4f}'.format(
+                epoch + 1,
+                num_epochs,
+                tot_loss / (i+1)))
+
     if local_rank == 0:
         print("Training completed in: " + str(datetime.now() - start))
 
@@ -108,7 +88,7 @@ def main():
                         help='local rank passed from distributed launcher')
 
     parser = deepspeed.add_config_arguments(parser)
-    
+
     args = parser.parse_args()
 
     train(args)

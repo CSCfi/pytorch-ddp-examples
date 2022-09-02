@@ -5,8 +5,8 @@ from datetime import datetime
 import argparse
 import os
 import torch
-import torch.distributed as dist
 import torch.nn as nn
+import torch.distributed as dist
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.distributed import DistributedSampler
@@ -38,12 +38,14 @@ class ConvNet(nn.Module):
 
 
 def train(num_epochs):
-    local_rank = int(os.environ['LOCAL_RANK'])
-
     dist.init_process_group(backend='nccl')
 
     torch.manual_seed(0)
+    local_rank = int(os.environ['LOCAL_RANK'])
     torch.cuda.set_device(local_rank)
+
+    verbose = dist.get_rank() == 0  # print only on global_rank==0
+
     model = ConvNet().cuda()
     batch_size = 100
 
@@ -60,8 +62,8 @@ def train(num_epochs):
                               sampler=train_sampler)
 
     start = datetime.now()
-    total_step = len(train_loader)
     for epoch in range(num_epochs):
+        tot_loss = 0
         for i, (images, labels) in enumerate(train_loader):
             images = images.cuda(non_blocking=True)
             labels = labels.cuda(non_blocking=True)
@@ -72,14 +74,15 @@ def train(num_epochs):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (i + 1) % 100 == 0 and local_rank == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(
-                    epoch + 1,
-                    num_epochs,
-                    i + 1,
-                    total_step,
-                    loss.item()))
-    if local_rank == 0:
+
+            tot_loss += loss.item()
+
+        if verbose:
+            print('Epoch [{}/{}], average loss: {:.4f}'.format(
+                epoch + 1,
+                num_epochs,
+                tot_loss / (i+1)))
+    if verbose:
         print("Training completed in: " + str(datetime.now() - start))
 
 

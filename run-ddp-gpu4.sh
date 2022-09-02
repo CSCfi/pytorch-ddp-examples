@@ -10,4 +10,4 @@
 module purge
 module load pytorch
 
-srun python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 $*
+srun python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 mnist_ddp.py --epochs=100

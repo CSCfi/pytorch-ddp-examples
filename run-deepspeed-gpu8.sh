@@ -9,8 +9,7 @@
 #SBATCH --gres=gpu:v100:4
 
 module purge
-module load pytorch/1.9
+module load pytorch
 
-set -x
-
-srun python3 $*
+srun python3 mnist_ddp_deepspeed.py --epochs=100 \
+     --deepspeed --deepspeed_config ds_config.json
