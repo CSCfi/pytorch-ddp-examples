@@ -10,5 +10,5 @@
 module purge
 module load pytorch
 
-srun singularity_wrapper exec deepspeed mnist_ddp_deepspeed.py --epochs=100 \
+srun singularity_wrapper exec deepspeed mnist_deepspeed.py --epochs=100 \
      --deepspeed --deepspeed_config ds_config.json

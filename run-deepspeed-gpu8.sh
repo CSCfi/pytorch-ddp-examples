@@ -11,5 +11,5 @@
 module purge
 module load pytorch
 
-srun python3 mnist_ddp_deepspeed.py --epochs=100 \
+srun python3 mnist_deepspeed.py --epochs=100 \
      --deepspeed --deepspeed_config ds_config.json
