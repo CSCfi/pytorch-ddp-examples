@@ -43,6 +43,8 @@ sbatch run-ddp-gpu8.sh
 
 ## PyTorch Lightning examples
 
+**NOTE: there is a known issue with the examples not working properly with `pytorch/1.13` or `pytorch/2.0` (i.e., it uses only 1 GPU even though more are requested). As a work-around you can use `pytorch/1.12`. We're working to fix this ASAP.**
+
 Multi-GPU and multi-node jobs are even easier with [PyTorch Lightning][lightning].
 
 Four GPUs on single node on Puhti:
