@@ -43,9 +43,11 @@ sbatch run-ddp-gpu8.sh
 
 ## PyTorch Lightning examples
 
-**NOTE: there is a known issue with the examples not working properly with `pytorch/1.13` or `pytorch/2.0` (i.e., it uses only 1 GPU even though more are requested). As a work-around you can use `pytorch/1.12`. We're working to fix this ASAP.**
-
-Multi-GPU and multi-node jobs are even easier with [PyTorch Lightning][lightning].
+Multi-GPU and multi-node jobs are even easier with [PyTorch
+Lightning][lightning]. The [official PyTorch Lightning now has a
+relatively good Slurm
+documentation](https://lightning.ai/docs/pytorch/stable/clouds/cluster_advanced.html?highlight=slurm),
+although it has to be modified a bit for Puhti.
 
 Four GPUs on single node on Puhti:
 
@@ -58,10 +60,6 @@ Two nodes, 8 GPUs in total on Puhti:
 ```bash
 sbatch run-lightning-gpu8.sh
 ```
-
-**Note:** Multi-node Lightning still seems to work best with
-`pytorch/1.12` module or newer on Puhti.
-
 
 ## DeepSpeed examples
 

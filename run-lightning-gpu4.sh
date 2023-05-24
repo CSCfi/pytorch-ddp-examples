@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --account=project_2001659
 #SBATCH --partition=gputest
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=40
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=10
 #SBATCH --mem=0
 #SBATCH --time=15
 #SBATCH --gres=gpu:v100:4

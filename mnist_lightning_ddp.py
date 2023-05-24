@@ -6,12 +6,11 @@ import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
-# from pytorch_lightning.strategies import DDPStrategy
-from pytorch_lightning.plugins import DDPPlugin
+#import lightning as L
+import pytorch_lightning as L
 
 
-class LitConvNet(pl.LightningModule):
+class LitConvNet(L.LightningModule):
     def __init__(self, num_classes=10):
         super().__init__()
         self.layer1 = nn.Sequential(
@@ -54,6 +53,8 @@ def main():
                         help='maximum number of epochs to run')
     args = parser.parse_args()
 
+    print("Using PyTorch {} and Lightning {}".format(torch.__version__, L.__version__))
+
     batch_size = 100
     dataset = MNIST(os.getcwd(), download=True,
                     transform=transforms.ToTensor())
@@ -62,13 +63,11 @@ def main():
 
     convnet = LitConvNet()
 
-    trainer = pl.Trainer(gpus=args.gpus,
-                         num_nodes=args.nodes,
-                         max_epochs=args.epochs,
-                         accelerator='gpu',
-#                         strategy=DDPPlugin(find_unused_parameters=False))
-#                         strategy=DDPStrategy(find_unused_parameters=False))
-                         strategy='ddp')
+    trainer = L.Trainer(devices=args.gpus,
+                        num_nodes=args.nodes,
+                        max_epochs=args.epochs,
+                        accelerator='gpu',
+                        strategy='ddp')
 
     from datetime import datetime
     t0 = datetime.now()
