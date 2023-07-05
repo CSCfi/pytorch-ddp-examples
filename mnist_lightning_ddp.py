@@ -8,7 +8,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 #import lightning as L
 import pytorch_lightning as L
-
+import mlflow
 
 class LitConvNet(L.LightningModule):
     def __init__(self, num_classes=10):
@@ -36,6 +36,7 @@ class LitConvNet(L.LightningModule):
         images, labels = batch
         outputs = self(images)
         loss = F.cross_entropy(outputs, labels)
+        self.log("train_loss", loss)
         return loss
 
     def configure_optimizers(self):
@@ -52,6 +53,8 @@ def main():
     parser.add_argument('--epochs', default=2, type=int, metavar='N',
                         help='maximum number of epochs to run')
     args = parser.parse_args()
+
+    mlflow.autolog()
 
     print("Using PyTorch {} and Lightning {}".format(torch.__version__, L.__version__))
 
