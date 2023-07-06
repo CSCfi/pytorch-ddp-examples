@@ -47,9 +47,10 @@ def train(num_epochs):
     verbose = dist.get_rank() == 0  # print only on global_rank==0
     if verbose:
         mlflow.set_tracking_uri("/scratch/project_2001659/mvsjober/mlruns")
-        slurm_id = os.getenv("SLURM_JOB_ID")
-        if slurm_id:
-            mlflow.start_run(run_name=slurm_id)
+        #mlflow.set_tracking_uri("sqlite:////scratch/project_2001659/mvsjober/mlruns.db")
+        #mlflow.set_tracking_uri('https://mats-mlflow2.rahtiapp.fi/')
+
+        mlflow.start_run(run_name=os.getenv("SLURM_JOB_ID"))
 
     model = ConvNet().cuda()
     batch_size = 100
