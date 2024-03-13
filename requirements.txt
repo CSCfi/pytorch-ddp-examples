@@ -1,7 +1,7 @@
-torch
-torchvision
-deepspeed
-mpi4py
-mlflow
-accelerate
-pytorch_lightning
+torch>=2.2
+torchvision>=0.17.1
+deepspeed>=0.13.3
+mpi4py>=3.1.5
+mlflow>=2.10.2
+accelerate>=0.27.2
+lightning>=2.2

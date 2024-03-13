@@ -6,8 +6,8 @@ import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
-#import lightning as L
-import pytorch_lightning as L
+import lightning as L
+#import pytorch_lightning as L
 import mlflow
 
 class LitConvNet(L.LightningModule):
