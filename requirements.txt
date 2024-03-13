@@ -1,0 +1,7 @@
+torch
+torchvision
+deepspeed
+mpi4py
+mlflow
+accelerate
+pytorch_lightning
