@@ -4,19 +4,27 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=40
-#SBATCH --mem=0
+#SBATCH --mem=320G
 #SBATCH --time=15
 #SBATCH --gres=gpu:v100:4
 
 module purge
 module load pytorch
 
-#pip install --user accelerate
+GPUS_PER_NODE=4
+MASTER_ADDR=$(hostname -i)
+MASTER_PORT=12802
 
-MASTER_IP=$(ip -4 -brief addr show | grep -E 'hsn0|ib0' | grep -oP '([\d]+.[\d.]+)')
-MASTER_PORT=29400
-
-srun accelerate.sh --multi_gpu --num_processes=8 --num_machines=2 \
-     --mixed_precision=no --dynamo_backend=no \
-     --main_process_ip=$MASTER_IP --main_process_port=$MASTER_PORT \
-     mnist_accelerate.py --epochs=100
+# Note: --machine_rank must be evaluated on each node, hence the LAUNCH_CMD setup
+export LAUNCH_CMD="
+    accelerate launch \
+        --multi_gpu --mixed_precision no \
+        --num_machines=${SLURM_NNODES} \
+        --num_processes=$(expr ${SLURM_NNODES} \* ${GPUS_PER_NODE}) \
+        --machine_rank=\${SLURM_NODEID} \
+        --main_process_ip=${MASTER_ADDR} \
+        --main_process_port=${MASTER_PORT} \
+        mnist_accelerate.py --epochs=100 \
+    "
+echo ${LAUNCH_CMD}
+srun singularity_wrapper exec bash -c "${LAUNCH_CMD}"
