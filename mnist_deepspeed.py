@@ -11,6 +11,9 @@ from torchvision.datasets import MNIST
 import deepspeed
 from datetime import timedelta
 
+datadir = os.path.join('/scratch', os.environ['SLURM_JOB_ACCOUNT'],
+                       os.environ['USER'], 'MNIST')
+
 
 class ConvNet(nn.Module):
     def __init__(self, num_classes=10):
@@ -36,27 +39,21 @@ class ConvNet(nn.Module):
 
 
 def train(args):
-    num_epochs = args.epochs
-    local_rank = args.local_rank
-    if local_rank == -1:
-        local_rank = int(os.environ.get('PMIX_RANK', -1))
-
     deepspeed.init_distributed(timeout=timedelta(minutes=5))
 
-    torch.manual_seed(0)
     model = ConvNet()
 
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss()
 
-    train_dataset = MNIST(root='./data', train=True,
+    train_dataset = MNIST(root=datadir, train=True,
                           transform=transforms.ToTensor(), download=True)
 
-    model_engine, optimizer, train_loader, __ = deepspeed.initialize(
+    model_engine, optimizer, train_loader, _ = deepspeed.initialize(
         args=args, model=model, model_parameters=model.parameters(),
         training_data=train_dataset)
 
     start = datetime.now()
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         tot_loss = 0
         for i, data in enumerate(train_loader):
             images = data[0].to(model_engine.local_rank)
@@ -70,25 +67,24 @@ def train(args):
 
             tot_loss += loss.item()
 
-        if local_rank == 0:
-            print('Epoch [{}/{}], average loss: {:.4f}'.format(
-                epoch + 1,
-                num_epochs,
-                tot_loss / (i+1)))
-
-    if local_rank == 0:
+        # if model_engine.rank == 0:
+        #     print('Epoch [{}/{}], average loss: {:.4f}'.format(
+        #         epoch + 1,
+        #         args.epochs,
+        #         tot_loss / (i+1)))
+    if model_engine.global_rank == 0:
         print("Training completed in: " + str(datetime.now() - start))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
+    parser.add_argument('--epochs', default=2, type=int,
                         help='number of total epochs to run')
     parser.add_argument('--local_rank', type=int, default=-1,
-                        help='local rank passed from distributed launcher')
-
+                        help='local rank passed from distributed launcher')    
+    parser.add_argument('--workers', default=4, type=int,
+                        help='number of data loader workers')
     parser = deepspeed.add_config_arguments(parser)
-
     args = parser.parse_args()
 
     train(args)

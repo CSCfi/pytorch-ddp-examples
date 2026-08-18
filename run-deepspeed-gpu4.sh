@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --account=project_2001659
-#SBATCH --partition=gputest
+#SBATCH --partition=gpumedium
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=40
-#SBATCH --mem=0
+#SBATCH --cpus-per-task=288
 #SBATCH --time=15
-#SBATCH --gres=gpu:v100:4
+#SBATCH --gres=gpu:gh200:4
 
 module purge
-module load pytorch
+module load python-pytorch
 
-srun singularity_wrapper exec deepspeed mnist_deepspeed.py --epochs=100 \
+srun deepspeed mnist_deepspeed.py --epochs=100 \
      --deepspeed --deepspeed_config ds_config.json
