@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import lightning as L
-#import pytorch_lightning as L
 import mlflow
+
 
 class LitConvNet(L.LightningModule):
     def __init__(self, num_classes=10):
@@ -52,17 +52,20 @@ def main():
                         help='number of nodes')
     parser.add_argument('--epochs', default=2, type=int, metavar='N',
                         help='maximum number of epochs to run')
+    parser.add_argument('--workers', default=4, type=int,
+                        help='number of data loader workers')
     args = parser.parse_args()
 
     mlflow.autolog()
 
-    print("Using PyTorch {} and Lightning {}".format(torch.__version__, L.__version__))
+    print("Using PyTorch {} and Lightning {}".format(torch.__version__,
+                                                     L.__version__))
 
     batch_size = 100
     dataset = MNIST(os.getcwd(), download=True,
                     transform=transforms.ToTensor())
     train_loader = DataLoader(dataset, batch_size=batch_size,
-                              num_workers=10, pin_memory=True)
+                              num_workers=args.workers, pin_memory=True)
 
     convnet = LitConvNet()
 

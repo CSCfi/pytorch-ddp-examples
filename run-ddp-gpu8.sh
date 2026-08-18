@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=project_2001659
-#SBATCH --partition=gpumedium
+#SBATCH --partition=gpularge
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=288

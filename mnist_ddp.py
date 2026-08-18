@@ -40,7 +40,7 @@ class ConvNet(nn.Module):
         return out
 
 
-def train(num_epochs):
+def train(args):
     # Download dataset before setting up distributed processing since
     # torchvision dataset download logic is not multi-process safe ...
     if int(os.environ['RANK']) == 0:
@@ -68,11 +68,11 @@ def train(num_epochs):
                           transform=transforms.ToTensor(), download=False)
     train_sampler = DistributedSampler(train_dataset)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-                              shuffle=False, num_workers=0, pin_memory=True,
-                              sampler=train_sampler)
+                              shuffle=False, num_workers=args.workers,
+                              pin_memory=True, sampler=train_sampler)
 
     start = datetime.now()
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         tot_loss = 0
         for i, (images, labels) in enumerate(train_loader):
             images = images.to(device_id, non_blocking=True)
@@ -90,20 +90,23 @@ def train(num_epochs):
         if rank_zero:
             print('Epoch [{}/{}], average loss: {:.4f}'.format(
                 epoch + 1,
-                num_epochs,
+                args.epochs,
                 tot_loss / (i+1)))
     if rank_zero:
         print("Training completed in: " + str(datetime.now() - start))
 
     dist.destroy_process_group()
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
+    parser.add_argument('--epochs', default=2, type=int,
                         help='number of total epochs to run')
+    parser.add_argument('--workers', default=4, type=int,
+                        help='number of data loader workers')
     args = parser.parse_args()
 
-    train(args.epochs)
+    train(args)
 
 
 if __name__ == '__main__':
