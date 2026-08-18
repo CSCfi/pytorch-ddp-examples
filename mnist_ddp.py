@@ -41,11 +41,9 @@ class ConvNet(nn.Module):
 
 
 def train(num_epochs):
-    local_rank = int(os.environ['LOCAL_RANK'])
-
     # Download dataset before setting up distributed processing since
     # torchvision dataset download logic is not multi-process safe ...
-    if local_rank == 0:
+    if int(os.environ['RANK']) == 0:
         print('Downloading dataset (if needed) to', datadir)
         _ = MNIST(root=datadir, train=True, transform=transforms.ToTensor(),
                   download=True)
@@ -55,8 +53,8 @@ def train(num_epochs):
     # some things are done only on global rank zero
     rank_zero = dist.get_rank() == 0
 
-    # GPU device to use == local_rank
-    device_id = local_rank
+    # GPU device to use == LOCAL_RANK
+    device_id = int(os.environ['LOCAL_RANK'])
 
     model = ConvNet().to(device_id)
     batch_size = 100
@@ -64,7 +62,7 @@ def train(num_epochs):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 1e-4)
 
-    model = DistributedDataParallel(model, device_ids=[local_rank])
+    model = DistributedDataParallel(model, device_ids=[device_id])
 
     train_dataset = MNIST(root=datadir, train=True,
                           transform=transforms.ToTensor(), download=False)

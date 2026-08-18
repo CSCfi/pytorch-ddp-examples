@@ -9,8 +9,4 @@
 module purge
 module load python-pytorch
 
-# Old way with torch.distributed.run
-# srun python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 mnist_ddp.py --epochs=100
-
-# New way with torchrun
 srun torchrun --standalone --nnodes=1 --nproc_per_node=4 mnist_ddp.py --epochs=100
