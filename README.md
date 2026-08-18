@@ -12,7 +12,7 @@ are also examples with other frameworks, such as [PyTorch
 Lightning][lightning] and [DeepSpeed][deepspeed].
 
 All examples train a simple CNN on MNIST. Scripts have been provided
-for the Puhti supercomputer, but can be used on other systems with
+for the Roihu supercomputer, but can be used on other systems with
 minor modifications.
 
 For larger examples, see also our [Machine learning benchmarks
@@ -26,7 +26,7 @@ machinelearing](https://docs.csc.fi/support/tutorials/ml-multi/).
 
 ## Multi-GPU, single-node
 
-The simplest case is using all four GPUs on a single node on Puhti.
+The simplest case is using all four GPUs on a single node on Roihu.
 
 ```bash
 sbatch run-ddp-gpu4.sh
@@ -34,7 +34,7 @@ sbatch run-ddp-gpu4.sh
 
 ## Multi-GPU, multi-node
 
-Example using two nodes, four GPUs on each giving a total of 8 GPUs (again, on Puhti):
+Example using two nodes, four GPUs on each giving a total of 8 GPUs:
 
 ```bash
 sbatch run-ddp-gpu8.sh
@@ -47,15 +47,15 @@ Multi-GPU and multi-node jobs are even easier with [PyTorch
 Lightning][lightning]. The [official PyTorch Lightning now has a
 relatively good Slurm
 documentation](https://lightning.ai/docs/pytorch/stable/clouds/cluster_advanced.html?highlight=slurm),
-although it has to be modified a bit for Puhti.
+although it has to be modified a bit for Roihu.
 
-Four GPUs on single node on Puhti:
+Four GPUs on single node on Roihu:
 
 ```bash
 sbatch run-lightning-gpu4.sh
 ```
 
-Two nodes, 8 GPUs in total on Puhti:
+Two nodes, 8 GPUs in total:
 
 ```bash
 sbatch run-lightning-gpu8.sh
@@ -63,11 +63,10 @@ sbatch run-lightning-gpu8.sh
 
 ## DeepSpeed examples
 
-[DeepSpeed][deepspeed] should work on Puhti and Mahti with the
-[PyTorch module](https://docs.csc.fi/apps/pytorch/) (from version 1.10
-onwards).
+[DeepSpeed][deepspeed] works on Roihu with the [PyTorch
+module](https://docs.csc.fi/apps/pytorch/).
 
-Single-node with four GPUs (Puhti):
+Single-node with four GPUs:
 
 ```bash
 sbatch run-deepspeed-gpu4.sh
@@ -76,7 +75,7 @@ sbatch run-deepspeed-gpu4.sh
 Here we are using Slurm to launch a single process which uses DeepSpeed's
 launcher to launch four processes (one for each GPU).
 
-Two nodes, 8 GPUs in total (Puhti):
+Two nodes, 8 GPUs in total:
 
 ```bash
 sbatch run-deepspeed-gpu8.sh
