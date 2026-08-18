@@ -1,15 +1,19 @@
+# Based on multiprocessing example from
+# https://yangkky.github.io/2019/07/08/distributed-pytorch-tutorial.html
+
 from datetime import datetime
 import argparse
 import os
 import torch
 import torch.nn as nn
-# import torch.distributed as dist
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
-# from torch.utils.data.distributed import DistributedSampler
-# from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
+
 from accelerate import Accelerator
+
+datadir = os.path.join('/scratch', os.environ['SLURM_JOB_ACCOUNT'],
+                       os.environ['USER'], 'MNIST')
 
 
 class ConvNet(nn.Module):
@@ -35,70 +39,64 @@ class ConvNet(nn.Module):
         return out
 
 
-def train(num_epochs):
+def train(args):
+    # Download dataset before setting up distributed processing since
+    # torchvision dataset download logic is not multi-process safe ...
+    if int(os.environ['RANK']) == 0:
+        print('Downloading dataset (if needed) to', datadir)
+        _ = MNIST(root=datadir, train=True, transform=transforms.ToTensor(),
+                  download=True)
+
     accelerator = Accelerator()
-    # dist.init_process_group(backend='nccl')
 
-    torch.manual_seed(0)
-    # local_rank = int(os.environ['LOCAL_RANK'])
-    # torch.cuda.set_device(local_rank)
+    # some things are done only on global rank zero
+    rank_zero = accelerator.is_main_process
 
-    #verbose = dist.get_rank() == 0  # print only on global_rank==0
-    verbose = accelerator.is_main_process  # print only in main process
-
-    model = ConvNet().cuda()
+    model = ConvNet()
     batch_size = 100
 
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 1e-4)
 
-    # model = DistributedDataParallel(model, device_ids=[local_rank])
-
-    train_dataset = MNIST(root='./data', train=True,
-                          transform=transforms.ToTensor(), download=True)
-    # train_sampler = DistributedSampler(train_dataset)
-    # train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-    #                           shuffle=False, num_workers=0, pin_memory=True,
-    #                           sampler=train_sampler)
+    train_dataset = MNIST(root=datadir, train=True,
+                          transform=transforms.ToTensor(), download=False)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-                              shuffle=False, num_workers=0, pin_memory=True)
+                              shuffle=False, num_workers=args.workers,
+                              pin_memory=True)
 
-    train_loader, model, optimizer = accelerator.prepare(train_loader, model,
-                                                         optimizer)
+    model, optimizer, train_loader = accelerator.prepare(model, optimizer,
+                                                         train_loader)
 
     start = datetime.now()
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         tot_loss = 0
         for i, (images, labels) in enumerate(train_loader):
-            # images = images.cuda(non_blocking=True)
-            # labels = labels.cuda(non_blocking=True)
-
             outputs = model(images)
             loss = criterion(outputs, labels)
 
             accelerator.backward(loss)
             optimizer.step()
-            # loss.backward()
-            optimizer.zero_grad()
 
             tot_loss += loss.item()
 
-        if verbose:
+        if rank_zero:
             print('Epoch [{}/{}], average loss: {:.4f}'.format(
                 epoch + 1,
-                num_epochs,
+                args.epochs,
                 tot_loss / (i+1)))
-    if verbose:
+    if rank_zero:
         print("Training completed in: " + str(datetime.now() - start))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
+    parser.add_argument('--epochs', default=2, type=int,
                         help='number of total epochs to run')
+    parser.add_argument('--workers', default=4, type=int,
+                        help='number of data loader workers')
     args = parser.parse_args()
 
-    train(args.epochs)
+    train(args)
 
 
 if __name__ == '__main__':
