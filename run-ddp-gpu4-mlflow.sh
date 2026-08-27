@@ -9,5 +9,4 @@
 module purge
 module load python-pytorch
 
-# New way with torchrun
 srun torchrun --standalone --nnodes=1 --nproc_per_node=4 mnist_ddp_mlflow.py --epochs=100
