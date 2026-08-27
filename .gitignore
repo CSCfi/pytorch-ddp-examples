@@ -6,3 +6,4 @@ slurm*out
 /*.ckpt
 /logs
 /mlruns
+/gpu.log
