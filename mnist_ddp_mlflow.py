@@ -14,6 +14,10 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
 import mlflow
 
+datadir = os.path.join('/scratch', os.environ['SLURM_JOB_ACCOUNT'],
+                       os.environ['USER'], 'MNIST')
+
+
 class ConvNet(nn.Module):
     def __init__(self, num_classes=10):
         super(ConvNet, self).__init__()
@@ -37,42 +41,56 @@ class ConvNet(nn.Module):
         return out
 
 
-def train(num_epochs):
+def train(args):
+    # Download dataset before setting up distributed processing since
+    # torchvision dataset download logic is not multi-process safe ...
+    if int(os.environ['RANK']) == 0:
+        print('Downloading dataset (if needed) to', datadir)
+        _ = MNIST(root=datadir, train=True, transform=transforms.ToTensor(),
+                  download=True)
+
     dist.init_process_group(backend='nccl')
 
-    torch.manual_seed(0)
-    local_rank = int(os.environ['LOCAL_RANK'])
-    torch.cuda.set_device(local_rank)
+    # some things are done only on global rank zero
+    rank_zero = dist.get_rank() == 0
 
-    verbose = dist.get_rank() == 0  # print only on global_rank==0
-    if verbose:
+    # GPU device to use == LOCAL_RANK
+    device_id = int(os.environ['LOCAL_RANK'])
+
+    # Set up mlflow tracking
+    if rank_zero:
+        # Plain directory
         mlflow.set_tracking_uri("/scratch/project_2001659/mvsjober/mlruns")
-        #mlflow.set_tracking_uri("sqlite:////scratch/project_2001659/mvsjober/mlruns.db")
-        #mlflow.set_tracking_uri('https://mats-mlflow2.rahtiapp.fi/')
+
+        # SQLite
+        # mlflow.set_tracking_uri("sqlite:////scratch/project_2001659/mvsjober/mlruns.db")
+
+        # Tracking server in rahti
+        # mlflow.set_tracking_uri('https://mats-mlflow2.rahtiapp.fi/')
 
         mlflow.start_run(run_name=os.getenv("SLURM_JOB_ID"))
 
-    model = ConvNet().cuda()
+    model = ConvNet().to(device_id)
     batch_size = 100
 
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 1e-4)
 
-    model = DistributedDataParallel(model, device_ids=[local_rank])
+    model = DistributedDataParallel(model, device_ids=[device_id])
 
-    train_dataset = MNIST(root='./data', train=True,
-                          transform=transforms.ToTensor(), download=True)
+    train_dataset = MNIST(root=datadir, train=True,
+                          transform=transforms.ToTensor(), download=False)
     train_sampler = DistributedSampler(train_dataset)
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-                              shuffle=False, num_workers=0, pin_memory=True,
-                              sampler=train_sampler)
+                              shuffle=False, num_workers=args.workers,
+                              pin_memory=True, sampler=train_sampler)
 
     start = datetime.now()
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         tot_loss = 0
         for i, (images, labels) in enumerate(train_loader):
-            images = images.cuda(non_blocking=True)
-            labels = labels.cuda(non_blocking=True)
+            images = images.to(device_id, non_blocking=True)
+            labels = labels.to(device_id, non_blocking=True)
 
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -83,25 +101,27 @@ def train(num_epochs):
 
             tot_loss += loss.item()
 
-        if verbose:
-            tot_loss = tot_loss / (i+1)
-            mlflow.log_metric("loss", tot_loss)
-            
+        if rank_zero:
+            mlflow.log_metric("loss", tot_loss / (i+1), epoch)
             print('Epoch [{}/{}], average loss: {:.4f}'.format(
                 epoch + 1,
-                num_epochs,
-                tot_loss))
-    if verbose:
+                args.epochs,
+                tot_loss / (i+1)))
+    if rank_zero:
         print("Training completed in: " + str(datetime.now() - start))
+
+    dist.destroy_process_group()
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
+    parser.add_argument('--epochs', default=2, type=int,
                         help='number of total epochs to run')
+    parser.add_argument('--workers', default=4, type=int,
+                        help='number of data loader workers')
     args = parser.parse_args()
 
-    train(args.epochs)
+    train(args)
 
 
 if __name__ == '__main__':
